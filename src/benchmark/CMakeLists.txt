@@ -17,6 +17,3 @@ if (glog_FOUND)
   target_link_libraries(easylog_benchmark PRIVATE glog::glog)
 endif ()
 
-if (NOT (${CMAKE_SYSTEM_NAME} MATCHES "Darwin"))
-        target_link_libraries(easylog_benchmark PRIVATE -lstdc++fs)
-endif()

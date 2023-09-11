@@ -1,123 +1,93 @@
-/*
- * Copyright (c) 2022, Alibaba Group Holding Limited;
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 #pragma once
 #include <functional>
 #include <memory>
 
-#ifdef __GLIBCXX__
-#if __GLIBCXX__ < 20200825
-namespace std {
-template <class T>
-struct remove_cvref {
+template <class T> struct remove_cvref {
   typedef std::remove_cv_t<std::remove_reference_t<T>> type;
 };
-template <class T>
-using remove_cvref_t = typename remove_cvref<T>::type;
-}  // namespace std
-#endif
-#endif
+template <class T> using remove_cvref_t = typename remove_cvref<T>::type;
 
 namespace coro_rpc {
-template <typename Function>
-struct function_traits;
+template <typename Function> struct function_traits;
 
 template <typename Return, typename... Arguments>
 struct function_traits<Return (*)(Arguments...)> {
-  using parameters_type = std::tuple<std::remove_cvref_t<Arguments>...>;
+  using parameters_type = std::tuple<remove_cvref_t<Arguments>...>;
   using return_type = Return;
 };
 
 template <typename Return, typename... Arguments>
 struct function_traits<Return (*)(Arguments...) noexcept> {
-  using parameters_type = std::tuple<std::remove_cvref_t<Arguments>...>;
+  using parameters_type = std::tuple<remove_cvref_t<Arguments>...>;
   using return_type = Return;
 };
 
 template <typename Return, typename... Arguments>
 struct function_traits<Return(Arguments...)> {
-  using parameters_type = std::tuple<std::remove_cvref_t<Arguments>...>;
+  using parameters_type = std::tuple<remove_cvref_t<Arguments>...>;
   using return_type = Return;
 };
 
 template <typename Return, typename... Arguments>
 struct function_traits<Return(Arguments...) noexcept> {
-  using parameters_type = std::tuple<std::remove_cvref_t<Arguments>...>;
+  using parameters_type = std::tuple<remove_cvref_t<Arguments>...>;
   using return_type = Return;
 };
 
 template <typename This, typename Return, typename... Arguments>
 struct function_traits<Return (This::*)(Arguments...)> {
-  using parameters_type = std::tuple<std::remove_cvref_t<Arguments>...>;
+  using parameters_type = std::tuple<remove_cvref_t<Arguments>...>;
   using return_type = Return;
   using class_type = This;
 };
 
 template <typename This, typename Return, typename... Arguments>
 struct function_traits<Return (This::*)(Arguments...) noexcept> {
-  using parameters_type = std::tuple<std::remove_cvref_t<Arguments>...>;
+  using parameters_type = std::tuple<remove_cvref_t<Arguments>...>;
   using return_type = Return;
   using class_type = This;
 };
 
 template <typename This, typename Return, typename... Arguments>
 struct function_traits<Return (This::*)(Arguments...) const> {
-  using parameters_type = std::tuple<std::remove_cvref_t<Arguments>...>;
+  using parameters_type = std::tuple<remove_cvref_t<Arguments>...>;
   using return_type = Return;
   using class_type = This;
 };
 
 template <typename This, typename Return, typename... Arguments>
 struct function_traits<Return (This::*)(Arguments...) const noexcept> {
-  using parameters_type = std::tuple<std::remove_cvref_t<Arguments>...>;
+  using parameters_type = std::tuple<remove_cvref_t<Arguments>...>;
   using return_type = Return;
   using class_type = This;
 };
 
-template <typename Return>
-struct function_traits<Return (*)()> {
+template <typename Return> struct function_traits<Return (*)()> {
   using parameters_type = void;
   using return_type = Return;
 };
 
-template <typename Return>
-struct function_traits<Return (*)() noexcept> {
+template <typename Return> struct function_traits<Return (*)() noexcept> {
   using parameters_type = void;
   using return_type = Return;
 };
 
-template <typename Return>
-struct function_traits<Return (&)()> {
+template <typename Return> struct function_traits<Return (&)()> {
   using parameters_type = void;
   using return_type = Return;
 };
 
-template <typename Return>
-struct function_traits<Return (&)() noexcept> {
+template <typename Return> struct function_traits<Return (&)() noexcept> {
   using parameters_type = void;
   using return_type = Return;
 };
 
-template <typename Return>
-struct function_traits<Return()> {
+template <typename Return> struct function_traits<Return()> {
   using parameters_type = void;
   using return_type = Return;
 };
 
-template <typename Return>
-struct function_traits<Return() noexcept> {
+template <typename Return> struct function_traits<Return() noexcept> {
   using parameters_type = void;
   using return_type = Return;
 };
@@ -156,7 +126,7 @@ struct function_traits : function_traits<decltype(&Function::operator())> {};
 
 template <typename Function>
 using function_parameters_t =
-    typename function_traits<std::remove_cvref_t<Function>>::parameters_type;
+    typename function_traits<remove_cvref_t<Function>>::parameters_type;
 
 template <typename Function>
 using last_parameters_type_t =
@@ -165,11 +135,11 @@ using last_parameters_type_t =
 
 template <typename Function>
 using function_return_type_t =
-    typename function_traits<std::remove_cvref_t<Function>>::return_type;
+    typename function_traits<remove_cvref_t<Function>>::return_type;
 
 template <typename Function>
 using class_type_t =
-    typename function_traits<std::remove_cvref_t<Function>>::class_type;
+    typename function_traits<remove_cvref_t<Function>>::class_type;
 
 template <typename F, typename... Args>
 struct is_invocable
@@ -180,8 +150,7 @@ struct is_invocable
 template <typename F, typename... Args>
 inline constexpr bool is_invocable_v = is_invocable<F, Args...>::value;
 
-template <typename T>
-struct remove_first {
+template <typename T> struct remove_first {
   using type = T;
 };
 
@@ -190,16 +159,13 @@ struct remove_first<std::tuple<First, Second...>> {
   using type = std::tuple<Second...>;
 };
 
-template <typename T>
-using remove_first_t = typename remove_first<T>::type;
+template <typename T> using remove_first_t = typename remove_first<T>::type;
 
-template <bool has_conn, typename T>
-inline auto get_args() {
+template <bool has_conn, typename T> inline auto get_args() {
   if constexpr (has_conn) {
     using args_type = remove_first_t<T>;
     return args_type{};
-  }
-  else {
+  } else {
     return T{};
   }
 }
@@ -213,4 +179,4 @@ struct is_specialization<Ref<Args...>, Ref> : std::true_type {};
 template <typename Test, template <typename...> class Ref>
 inline constexpr bool is_specialization_v = is_specialization<Test, Ref>::value;
 
-}  // namespace coro_rpc
+} // namespace coro_rpc

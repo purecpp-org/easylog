@@ -20,12 +20,12 @@
 
 #include <filesystem>
 
-#include "easylog/easylog.h"
+#include "easylog.hpp"
 
 using namespace easylog;
 
 class ScopedTimer {
- public:
+public:
   ScopedTimer(const char *name)
       : m_name(name), m_beg(std::chrono::high_resolution_clock::now()) {}
   ScopedTimer(const char *name, uint64_t &ns) : ScopedTimer(name) {
@@ -41,7 +41,7 @@ class ScopedTimer {
     std::cout << m_name << " : " << dur.count() << " ns\n";
   }
 
- private:
+private:
   const char *m_name;
   std::chrono::time_point<std::chrono::high_resolution_clock> m_beg;
   uint64_t *m_ns = nullptr;

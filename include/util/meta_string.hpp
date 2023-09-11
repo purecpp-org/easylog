@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Alibaba Group Holding Limited;
+ * Copyright (c) 2023, Alibaba Group Holding Limited;
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
-#if __has_include(<span>)
+#if __has_include(<span>) && __cplusplus > 201703L
 #include <compare>
 #include <concepts>
 #include <span>
@@ -32,17 +32,17 @@
 #include <utility>
 
 namespace refvalue {
-template <std::size_t N>
-struct meta_string {
+template <std::size_t N> struct meta_string {
   std::array<char, N + 1> elements_;
 
   constexpr meta_string() noexcept : elements_{} {}
 
-  constexpr meta_string(const char (&data)[N + 1]) noexcept {
-    for (size_t i = 0; i < N + 1; i++) elements_[i] = data[i];
+  constexpr meta_string(const char (&data)[N + 1]) noexcept : elements_{} {
+    for (size_t i = 0; i < N + 1; i++)
+      elements_[i] = data[i];
   }
 
-#if __has_include(<span>)
+#if __has_include(<span>) && __cplusplus > 201703L
   template <std::size_t... Ns>
   constexpr meta_string(std::span<const char, Ns>... data) noexcept
       : elements_{} {
@@ -53,23 +53,24 @@ struct meta_string {
 #endif
 
   template <std::size_t... Ns>
-  constexpr meta_string(const meta_string<Ns>&... data) noexcept : elements_{} {
+  constexpr meta_string(const meta_string<Ns> &...data) noexcept : elements_{} {
     auto iter = elements_.begin();
 
     ((iter = std::copy(data.begin(), data.end(), iter)), ...);
   }
 
-#if __has_include(<span>)
+#if __has_include(<span>) && __cplusplus > 201703L
   template <std::same_as<char>... Ts>
-  constexpr meta_string(Ts... chars) noexcept requires(sizeof...(Ts) == N)
+  constexpr meta_string(Ts... chars) noexcept
+    requires(sizeof...(Ts) == N)
       : elements_{chars...} {}
 #endif
 
-  constexpr char& operator[](std::size_t index) noexcept {
+  constexpr char &operator[](std::size_t index) noexcept {
     return elements_[index];
   }
 
-  constexpr const char& operator[](std::size_t index) const noexcept {
+  constexpr const char &operator[](std::size_t index) const noexcept {
     return elements_[index];
   }
 
@@ -81,13 +82,13 @@ struct meta_string {
 
   constexpr std::size_t size() const noexcept { return N; }
 
-  constexpr char& front() noexcept { return elements_.front(); }
+  constexpr char &front() noexcept { return elements_.front(); }
 
-  constexpr const char& front() const noexcept { return elements_.front(); }
+  constexpr const char &front() const noexcept { return elements_.front(); }
 
-  constexpr char& back() noexcept { return elements_[size() - 1]; }
+  constexpr char &back() noexcept { return elements_[size() - 1]; }
 
-  constexpr const char& back() const noexcept { return elements_[size() - 1]; }
+  constexpr const char &back() const noexcept { return elements_[size() - 1]; }
 
   constexpr auto begin() noexcept { return elements_.begin(); }
 
@@ -97,11 +98,11 @@ struct meta_string {
 
   constexpr auto end() const noexcept { return elements_.begin() + size(); }
 
-  constexpr char* data() noexcept { return elements_.data(); }
+  constexpr char *data() noexcept { return elements_.data(); }
 
-  constexpr const char* data() const noexcept { return elements_.data(); };
+  constexpr const char *data() const noexcept { return elements_.data(); };
 
-  constexpr const char* c_str() const noexcept { return elements_.data(); }
+  constexpr const char *c_str() const noexcept { return elements_.data(); }
 
   constexpr bool contains(char c) const noexcept {
     return std::find(begin(), end(), c) != end();
@@ -116,11 +117,9 @@ struct meta_string {
   static constexpr size_t substr_len(size_t pos, size_t count) {
     if (pos >= N) {
       return 0;
-    }
-    else if (count == std::string_view::npos || pos + count > N) {
+    } else if (count == std::string_view::npos || pos + count > N) {
       return N - pos;
-    }
-    else {
+    } else {
       return count;
     }
   }
@@ -130,7 +129,7 @@ struct meta_string {
     constexpr size_t n = substr_len(pos, count);
 
     meta_string<n> result;
-    for (int i = 0; i < n; ++i) {
+    for (std::size_t i = 0; i < n; ++i) {
       result[i] = elements_[pos + i];
     }
     return result;
@@ -145,79 +144,80 @@ struct meta_string {
   }
 };
 
-template <std::size_t N>
-meta_string(const char (&)[N]) -> meta_string<N - 1>;
+template <std::size_t N> meta_string(const char (&)[N]) -> meta_string<N - 1>;
 
-#if __has_include(<span>)
+#if __has_include(<span>) && __cplusplus > 201703L
 template <std::size_t... Ns>
 meta_string(std::span<const char, Ns>...) -> meta_string<(Ns + ...)>;
 #endif
 
 template <std::size_t... Ns>
-meta_string(const meta_string<Ns>&...) -> meta_string<(Ns + ...)>;
+meta_string(const meta_string<Ns> &...) -> meta_string<(Ns + ...)>;
 
-#if __has_include(<span>)
+#if __has_include(<span>) && __cplusplus > 201703L
 template <std::same_as<char>... Ts>
 meta_string(Ts...) -> meta_string<sizeof...(Ts)>;
 #endif
 
-#if __has_include(<span>)
+#if __has_include(<span>) && __cplusplus > 201703L
 template <std::size_t M, std::size_t N>
-constexpr auto operator<=>(const meta_string<M>& left,
-                           const meta_string<N>& right) noexcept {
+constexpr auto operator<=>(const meta_string<M> &left,
+                           const meta_string<N> &right) noexcept {
   return static_cast<std::string_view>(left).compare(
              static_cast<std::string_view>(right)) <=> 0;
 }
 #endif
 
 template <std::size_t M, std::size_t N>
-constexpr bool operator==(const meta_string<M>& left,
-                          const meta_string<N>& right) noexcept {
+constexpr bool operator==(const meta_string<M> &left,
+                          const meta_string<N> &right) noexcept {
   return static_cast<std::string_view>(left) ==
          static_cast<std::string_view>(right);
 }
 
 template <std::size_t M, std::size_t N>
-constexpr bool operator==(const meta_string<M>& left,
+constexpr bool operator==(const meta_string<M> &left,
                           const char (&right)[N]) noexcept {
   return static_cast<std::string_view>(left) ==
          static_cast<std::string_view>(meta_string{right});
 }
 
 template <std::size_t M, std::size_t N>
-constexpr auto operator+(const meta_string<M>& left,
-                         const meta_string<N>& right) noexcept {
+constexpr auto operator+(const meta_string<M> &left,
+                         const meta_string<N> &right) noexcept {
   return meta_string{left, right};
 }
 
 template <std::size_t M, std::size_t N>
-constexpr auto operator+(const meta_string<M>& left,
+constexpr auto operator+(const meta_string<M> &left,
                          const char (&right)[N]) noexcept {
   meta_string<M + N - 1> s;
-  for (size_t i = 0; i < M; ++i) s[i] = left[i];
-  for (size_t i = 0; i < N; ++i) s[M + i] = right[i];
+  for (size_t i = 0; i < M; ++i)
+    s[i] = left[i];
+  for (size_t i = 0; i < N; ++i)
+    s[M + i] = right[i];
   return s;
 }
 
 template <std::size_t M, std::size_t N>
 constexpr auto operator+(const char (&left)[M],
-                         const meta_string<N>& right) noexcept {
+                         const meta_string<N> &right) noexcept {
   meta_string<M + N - 1> s;
-  for (size_t i = 0; i < M - 1; ++i) s[i] = left[i];
-  for (size_t i = 0; i < N; ++i) s[M + i - 1] = right[i];
+  for (size_t i = 0; i < M - 1; ++i)
+    s[i] = left[i];
+  for (size_t i = 0; i < N; ++i)
+    s[M + i - 1] = right[i];
   return s;
 }
 
-#if __has_include(<span>)
-template <meta_string S, meta_string Delim>
-struct split_of {
+#if __has_include(<span>) && __cplusplus > 201703L
+template <meta_string S, meta_string Delim> struct split_of {
   static constexpr auto value = [] {
     constexpr std::string_view view{S};
-    constexpr auto group_count = std::count_if(S.begin(), S.end(),
-                                               [](char c) {
-                                                 return Delim.contains(c);
-                                               }) +
-                                 1;
+    constexpr auto group_count =
+        std::count_if(S.begin(), S.end(),
+                      [](char c) { return Delim.contains(c); }) +
+        1;
     std::array<std::string_view, group_count> result{};
 
     auto iter = result.begin();
@@ -237,10 +237,9 @@ struct split_of {
 };
 
 template <meta_string S, meta_string Delim>
-inline constexpr auto&& split_of_v = split_of<S, Delim>::value;
+inline constexpr auto &&split_of_v = split_of<S, Delim>::value;
 
-template <meta_string S, meta_string Delim>
-struct split {
+template <meta_string S, meta_string Delim> struct split {
   static constexpr std::string_view view{S};
   static constexpr auto value = [] {
     constexpr auto group_count = [] {
@@ -273,10 +272,9 @@ struct split {
 };
 
 template <meta_string S, meta_string Delim>
-inline constexpr auto&& split_v = split<S, Delim>::value;
+inline constexpr auto &&split_v = split<S, Delim>::value;
 
-template <meta_string S, char C>
-struct remove_char {
+template <meta_string S, char C> struct remove_char {
   static constexpr auto value = [] {
     struct removal_metadata {
       decltype(S) result;
@@ -302,10 +300,9 @@ struct remove_char {
 };
 
 template <meta_string S, char C>
-inline constexpr auto&& remove_char_v = remove_char<S, C>::value;
+inline constexpr auto &&remove_char_v = remove_char<S, C>::value;
 
-template <meta_string S, meta_string Removal>
-struct remove {
+template <meta_string S, meta_string Removal> struct remove {
   static constexpr auto groups = split_v<S, Removal>;
   static constexpr auto value = [] {
     return []<std::size_t... Is>(std::index_sequence<Is...>) {
@@ -317,6 +314,6 @@ struct remove {
 };
 
 template <meta_string S, meta_string Removal>
-inline constexpr auto&& remove_v = remove<S, Removal>::value;
+inline constexpr auto &&remove_v = remove<S, Removal>::value;
 #endif
-}  // namespace refvalue
+} // namespace refvalue
