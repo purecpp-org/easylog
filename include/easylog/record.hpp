@@ -4,7 +4,7 @@
 #include <chrono>
 #include <cstring>
 
-#include "ylt/util/time_util.h"
+#include "util/time_util.hpp"
 #ifdef __linux__
 #include <sys/syscall.h>
 #include <unistd.h>
@@ -42,7 +42,7 @@ namespace easylog {
 namespace detail {
 template <class T>
 constexpr inline bool c_array_v =
-    std::is_array_v<remove_cvref_t<T>> && std::extent_v<remove_cvref_t<T>> > 0;
+    std::is_array_v<remove_cvref_t<T>> &&std::extent_v<remove_cvref_t<T>> > 0;
 
 template <typename Type, typename = void> struct has_data : std::false_type {};
 
@@ -155,7 +155,7 @@ public:
     } else if constexpr (std::is_same_v<std::chrono::system_clock::time_point,
                                         U>) {
       ss_.append(
-          ylt::get_local_time_str(std::chrono::system_clock::to_time_t(data)));
+          get_local_time_str(std::chrono::system_clock::to_time_t(data)));
     } else {
       std::stringstream ss;
       ss << data;
