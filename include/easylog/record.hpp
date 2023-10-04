@@ -176,8 +176,9 @@ public:
     return *this;
   }
 
-  template <typename String> record_t &format(String &&str) {
-    ss_.append(str.data());
+  template <typename... Args>
+  record_t &format(const char *fmt, Args &&...args) {
+    ss_.append(fmt::format(fmt, std::forward<Args>(args)...));
     return *this;
   }
 
