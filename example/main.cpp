@@ -6,6 +6,8 @@ int main() {
   std::filesystem::remove(filename);
   easylog::init_log(easylog::Severity::DEBUG, filename, true, 5000, 1, true);
 
+  ELOGFMT(INFO, "test {}", 42);
+
   ELOG_INFO << 42;
   ELOG_INFO << 42 << " " << 4.5 << 'a' << easylog::Severity::DEBUG;
 
