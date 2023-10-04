@@ -1,11 +1,45 @@
 #pragma once
 #include <functional>
 #include <memory>
+#include <string>
+#include <string_view>
 
 template <class T> struct remove_cvref {
   typedef std::remove_cv_t<std::remove_reference_t<T>> type;
 };
 template <class T> using remove_cvref_t = typename remove_cvref<T>::type;
+
+template <class T>
+constexpr inline bool c_array_v =
+    std::is_array_v<remove_cvref_t<T>> &&std::extent_v<remove_cvref_t<T>> > 0;
+
+template <typename Type, typename = void> struct is_array : std::false_type {};
+
+template <typename T>
+struct is_array<
+    T, std::void_t<decltype(std::declval<T>().size()),
+                   typename std::enable_if_t<(std::tuple_size<T>::value != 0)>>>
+    : std::true_type {};
+
+template <typename T>
+constexpr inline bool array_v = is_array<remove_cvref_t<T>>::value;
+
+template <typename Type>
+constexpr inline bool fixed_array_v = c_array_v<Type> || array_v<Type>;
+
+template <template <typename...> class U, typename T>
+struct is_template_instant_of : std::false_type {};
+
+template <template <typename...> class U, typename... args>
+struct is_template_instant_of<U, U<args...>> : std::true_type {};
+
+template <typename T>
+constexpr inline bool string_view_v =
+    is_template_instant_of<std::basic_string_view, remove_cvref_t<T>>::value;
+
+template <typename T>
+constexpr inline bool string_v =
+    is_template_instant_of<std::basic_string, remove_cvref_t<T>>::value;
 
 namespace coro_rpc {
 template <typename Function> struct function_traits;
@@ -150,9 +184,7 @@ struct is_invocable
 template <typename F, typename... Args>
 inline constexpr bool is_invocable_v = is_invocable<F, Args...>::value;
 
-template <typename T> struct remove_first {
-  using type = T;
-};
+template <typename T> struct remove_first { using type = T; };
 
 template <class First, class... Second>
 struct remove_first<std::tuple<First, Second...>> {

@@ -2,7 +2,10 @@
 
 #include <charconv>
 #include <chrono>
+#include <cstddef>
 #include <cstring>
+#include <functional>
+#include <type_traits>
 
 #include "util/time_util.hpp"
 #ifdef __linux__
@@ -67,6 +70,11 @@ struct has_str<T, std::void_t<decltype(std::declval<T>().str())>>
 template <typename T>
 constexpr inline bool has_str_v = has_str<remove_cvref_t<T>>::value;
 } // namespace detail
+
+enum class FormatType {
+  SPRINTF,
+  FORMAT,
+};
 
 enum class Severity {
   NONE,
@@ -170,15 +178,58 @@ public:
     return *this;
   }
 
-  template <typename... Args>
-  record_t &sprintf(const char *fmt, Args &&...args) {
-    ss_.append(fmt::sprintf(fmt, std::forward<Args>(args)...));
-    return *this;
+  void gen_content() {
+    if (args_cache_) {
+      ss_.append(args_cache_());
+      args_cache_ = {};
+    }
   }
 
-  template <typename... Args>
-  record_t &format(const char *fmt, Args &&...args) {
-    ss_.append(fmt::format(fmt, std::forward<Args>(args)...));
+  template <typename T> decltype(auto) transform(T &t) {
+    using U = std::remove_reference_t<T>;
+
+    if constexpr (std::is_same_v<U, const char *> || fixed_array_v<U> ||
+                  string_view_v<U>) {
+      return std::string(t);
+    } else if constexpr (string_v<U>) {
+      return std::move(t);
+    } else {
+      return t;
+    }
+  }
+
+  template <typename Tuple, size_t... I>
+  auto get_args_impl(Tuple &&tp, std::index_sequence<I...>) {
+    std::tuple<> t;
+    return std::tuple_cat(t, std::make_tuple(transform(std::get<I>(tp)))...);
+  }
+
+  template <FormatType fmt_type, typename... Args>
+  record_t &format(bool async, const char *fmt, Args &&...args) {
+    size_t len = strlen(fmt);
+    std::string str;
+    str.reserve(len);
+    str.append(fmt);
+    args_cache_ = [str = std::move(str),
+                   args1 = get_args_impl(
+                       std::make_tuple(std::forward<Args>(args)...),
+                       std::make_index_sequence<sizeof...(Args)>{})]() mutable {
+      return std::apply(
+          [str = std::move(str)](auto &&...args) mutable {
+            if constexpr (fmt_type == FormatType::FORMAT) {
+              return fmt::format(str.data(), std::move(args)...);
+            } else {
+              return fmt::sprintf(str.data(), std::move(args)...);
+            }
+          },
+          args1);
+    };
+
+    if (!async) {
+      ss_.append(args_cache_());
+      args_cache_ = {};
+    }
+
     return *this;
   }
 
@@ -243,6 +294,7 @@ private:
 #else
   std::string ss_;
 #endif
+  std::function<std::string()> args_cache_;
 };
 
 #define TO_STR(s) #s

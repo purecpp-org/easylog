@@ -140,6 +140,7 @@ public:
 
   template <bool sync = false, bool enable_console = false>
   void write_record(record_t &record) {
+    record.gen_content();
     std::lock_guard guard(get_mutex<sync>());
     if constexpr (sync == true) {
       if (max_files_ > 0 && file_size_ > max_file_size_ &&
