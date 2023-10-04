@@ -5,7 +5,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -pthread")
 
-include_directories(include)
+include_directories(
+        ./
+        include)
 
 add_executable(easylog_example
         example/main.cpp

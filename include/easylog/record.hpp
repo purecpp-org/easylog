@@ -17,6 +17,11 @@
 #include <string_view>
 #include <utility>
 
+#ifndef FMT_HEADER_ONLY
+#define FMT_HEADER_ONLY
+#endif
+#include "fmt/format.h"
+#include "fmt/printf.h"
 #include "util/dragonbox_to_chars.h"
 #include "util/meta_string.hpp"
 #include "util/type_traits.h"
@@ -167,7 +172,7 @@ public:
 
   template <typename... Args>
   record_t &sprintf(const char *fmt, Args &&...args) {
-    printf_string_format(fmt, std::forward<Args>(args)...);
+    ss_.append(fmt::sprintf(fmt, std::forward<Args>(args)...));
     return *this;
   }
 

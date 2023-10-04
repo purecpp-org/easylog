@@ -8,13 +8,6 @@
 #include <format>
 #endif
 
-#if __has_include(<fmt/format.h>)
-#ifndef FMT_HEADER_ONLY
-#define FMT_HEADER_ONLY
-#include <fmt/format.h>
-#endif
-#endif
-
 #include "easylog/appender.hpp"
 
 namespace easylog {
