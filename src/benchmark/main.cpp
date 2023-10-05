@@ -66,7 +66,8 @@ void test_glog() {
 
 void test_easylog() {
   std::filesystem::remove("easylog.txt");
-  easylog::init_log(Severity::DEBUG, "easylog.txt", false, 1024 * 1024, 1);
+  easylog::init_log(Severity::DEBUG, "easylog.txt", false, false, 1024 * 1024,
+                    1);
   {
     ScopedTimer timer("easylog");
     for (int i = 0; i < 5000; i++)

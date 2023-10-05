@@ -175,7 +175,8 @@ inline void add_appender(std::function<void(std::string_view)> fn) {
     easylog::logger<Id>::instance() +=                                         \
         easylog::record_t(std::chrono::system_clock::now(), severity,          \
                           GET_STRING(__FILE__, __LINE__))                      \
-            .sprintf(fmt, __VA_ARGS__);                                        \
+            .format<easylog::FormatType::SPRINTF>(easylog::get_async<Id>(),    \
+                                                  fmt, __VA_ARGS__);           \
     if (severity == easylog::Severity::CRITICAL) {                             \
       easylog::flush<Id>();                                                    \
       std::exit(EXIT_FAILURE);                                                 \
@@ -201,7 +202,8 @@ inline void add_appender(std::function<void(std::string_view)> fn) {
     easylog::logger<Id>::instance() +=                                         \
         easylog::record_t(std::chrono::system_clock::now(), severity,          \
                           GET_STRING(__FILE__, __LINE__))                      \
-            .format(prefix::format(format_str, __VA_ARGS__));                  \
+            .format<easylog::FormatType::FORMAT>(easylog::get_async<Id>(),     \
+                                                 format_str, __VA_ARGS__);     \
     if (severity == easylog::Severity::CRITICAL) {                             \
       easylog::flush<Id>();                                                    \
       std::exit(EXIT_FAILURE);                                                 \
