@@ -3,6 +3,7 @@
 #include <condition_variable>
 #include <filesystem>
 #include <fstream>
+#include <future>
 #include <iostream>
 #include <shared_mutex>
 #include <string>
@@ -77,7 +78,10 @@ public:
   void enable_console(bool b) { enable_console_ = b; }
 
   void start_thread() {
-    write_thd_ = std::thread([this] {
+    std::promise<void> promise;
+    auto future = promise.get_future();
+    write_thd_ = std::thread([this, promise = std::move(promise)]() mutable {
+      promise.set_value();
       while (!stop_) {
         if (max_files_ > 0 && file_size_ > max_file_size_ &&
             static_cast<size_t>(-1) != file_size_) {
@@ -110,6 +114,7 @@ public:
         }
       }
     });
+    future.wait();
   }
 
   std::string_view get_tid_buf(unsigned int tid) {

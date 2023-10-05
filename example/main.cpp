@@ -4,7 +4,8 @@
 int main() {
   std::string filename = "easylog.txt";
   std::filesystem::remove(filename);
-  easylog::init_log(easylog::Severity::DEBUG, filename, true, 5000, 1, true);
+  easylog::init_log(easylog::Severity::DEBUG, filename, true, true, 500000, 1,
+                    true);
 
   std::string str = "world";
   ELOGFMT(INFO, "test {} {} {}", 42, "hello", str);
